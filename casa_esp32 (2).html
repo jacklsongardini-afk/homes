@@ -1,0 +1,1118 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0f1115">
+<title>Automação Residencial ESP32</title>
+<style>
+:root{--bg:#0f1115;--card:#1a1d24;--line:#2a2f3a;--txt:#e8eaf0;--mut:#8b93a5;--acc:#f5b83d;--cool:#4cc3ff;--ok:#5fd38d;--bad:#ff6b6b}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--txt);font:16px/1.55 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+header{padding:28px 16px 8px;max-width:900px;margin:0 auto}
+header h1{margin:0 0 4px;font-size:26px}
+header p{margin:0;color:var(--mut)}
+nav{position:sticky;top:0;z-index:5;background:rgba(15,17,21,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);margin-top:16px}
+nav .in{max-width:900px;margin:0 auto;display:flex;gap:6px;overflow-x:auto;padding:8px 12px}
+nav button{flex:none;background:transparent;border:1px solid transparent;color:var(--mut);padding:8px 14px;border-radius:999px;font:inherit;font-size:15px;cursor:pointer}
+nav button.sel{background:var(--card);border-color:var(--line);color:var(--txt)}
+main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
+section{display:none}
+section.sel{display:block}
+h2{font-size:20px;margin:0 0 14px}
+h3{font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--mut);margin:26px 0 10px}
+p{margin:0 0 12px}
+code{background:#232832;padding:2px 6px;border-radius:6px;font:13px ui-monospace,Menlo,Consolas,monospace}
+table{width:100%;border-collapse:collapse;margin:8px 0 18px;font-size:15px}
+th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{color:var(--mut);font-weight:600;font-size:13px}
+.tw{overflow-x:auto}
+.callout{border:1px solid #7a5a12;background:#241d0b;border-radius:14px;padding:14px 16px;margin:16px 0}
+.callout b{color:var(--acc)}
+.callout ul{margin:8px 0 0;padding-left:20px}
+.info{border:1px solid #1d4a63;background:#0c1e29}
+.info b{color:var(--cool)}
+ol.steps{padding-left:22px}
+ol.steps li{margin-bottom:10px}
+pre{margin:0;background:#12151b;border:1px solid var(--line);border-radius:12px;padding:14px;overflow:auto;max-height:520px;font:12.5px/1.5 ui-monospace,Menlo,Consolas,monospace;tab-size:2}
+.ft{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;align-items:center}
+.ft button,.act button{background:var(--card);border:1px solid var(--line);color:var(--txt);padding:8px 14px;border-radius:10px;font:inherit;font-size:14px;cursor:pointer}
+.ft button.sel{border-color:var(--cool);color:var(--cool);background:#0e2a38}
+.act{display:flex;gap:8px;margin:10px 0 0}
+.file{display:none}.file.sel{display:block}
+svg{width:100%;height:auto;margin:6px 0 10px}
+svg .box{fill:var(--card);stroke:var(--line);stroke-width:1.5}
+svg .ln{stroke:var(--mut);stroke-width:2;fill:none}
+svg .ln.pw{stroke:var(--acc)}
+svg .t{fill:var(--txt);font:13px system-ui,sans-serif}
+svg .m{fill:var(--mut);font:12px system-ui,sans-serif}
+svg .b{font-weight:600;font-size:15px}
+/* painel de demonstração */
+.demo{max-width:560px;margin:0 auto}
+.badge{display:inline-block;font-size:12px;color:var(--cool);border:1px solid #1d4a63;border-radius:999px;padding:3px 10px;margin-bottom:6px}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.grid.g3{grid-template-columns:repeat(3,1fr)}
+.demo button{font:inherit;color:var(--txt);background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 8px;cursor:pointer;min-height:56px}
+.demo button:active{transform:scale(.97)}
+.tile{display:flex;flex-direction:column;align-items:center;gap:6px;padding:18px 8px!important}
+.tile .ic{font-size:26px}
+.tile.on{background:#2a2210!important;border-color:var(--acc)!important;color:var(--acc)!important}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px}
+.ac-top{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.ac-name{font-weight:600}
+.pw{min-height:44px!important;padding:8px 16px!important;border-radius:999px!important}
+.pw.on{background:#0e2a38!important;border-color:var(--cool)!important;color:var(--cool)!important}
+.temp{display:flex;align-items:center;justify-content:center;gap:22px;margin:14px 0}
+.temp b{font-size:52px;font-weight:600;min-width:100px;text-align:center}
+.temp button{width:58px;height:58px;border-radius:50%!important;font-size:26px;padding:0!important}
+.lbl{font-size:12px;color:var(--mut);margin:12px 0 6px}
+.seg{display:grid;gap:6px}
+.seg button{min-height:44px!important;padding:8px 2px!important;font-size:14px;border-radius:10px!important}
+.seg button.sel{background:#0e2a38!important;border-color:var(--cool)!important;color:var(--cool)!important}
+.off{opacity:.55}
+#toast{position:fixed;left:16px;right:16px;bottom:20px;max-width:520px;margin:0 auto;padding:12px 14px;border-radius:12px;display:none;text-align:center;z-index:20;border:1px solid}
+#toast.ok{background:#12301f;border-color:#2f7a4b;color:#b8f0cc}
+#toast.err{background:#3a1d1d;border-color:#a33;color:#fbb}
+.live{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin:0 0 14px}
+.live summary{cursor:pointer;font-size:14px;color:var(--cool)}
+.live .row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0}
+.live .full{grid-column:1/-1}
+.live input{width:100%;background:#12151b;border:1px solid var(--line);color:var(--txt);border-radius:10px;padding:10px;font:inherit;font-size:14px}
+.demo .live button{background:#0e2a38;border:1px solid var(--cool);color:var(--cool);border-radius:10px;padding:10px 14px;min-height:0;font-size:14px}
+.badge.live-on{color:var(--ok);border-color:#2f7a4b}
+.badge.live-off{color:var(--bad);border-color:#7a2f2f}
+footer{max-width:900px;margin:0 auto;padding:0 16px 40px;color:var(--mut);font-size:13px}
+</style>
+</head>
+<body>
+<header>
+  <h1>🏠 Automação residencial com ESP32</h1>
+  <p>Luzes e tomadas, 2 TVs, home theater e 2 ares-condicionados, pelo celular.</p>
+</header>
+
+<nav><div class="in" id="tabs">
+  <button data-t="painel" class="sel">Painel</button>
+  <button data-t="pecas">Peças</button>
+  <button data-t="ligacoes">Ligações</button>
+  <button data-t="mqtt">MQTT</button>
+  <button data-t="instalar">Instalação</button>
+  <button data-t="codigos">Códigos</button>
+  <button data-t="ajuda">Problemas</button>
+</div></nav>
+
+<main>
+
+<!-- ============ PAINEL ============ -->
+<section id="painel" class="sel">
+  <div class="demo">
+    <span class="badge" id="badge">Demonstração · nada é enviado de verdade</span>
+    <p style="color:var(--mut);font-size:14px">Este é o mesmo painel que o ESP32 mostra no celular em <code>http://casa.local</code>, aqui simulado para você testar. O painel real vem embutido no firmware (<code>webui.h</code>).</p>
+    <details class="live" id="livebox">
+      <summary>Conectar ao broker MQTT e controlar de verdade</summary>
+      <div class="row">
+        <input class="full" id="m-url" value="wss://w8767ca9.ala.us-east-1.emqxsl.com:8084/mqtt" aria-label="Endereço WebSocket do broker">
+        <input id="m-user" value="RICARDO" aria-label="Usuário">
+        <input id="m-pass" type="password" placeholder="Senha" aria-label="Senha">
+        <input class="full" id="m-base" value="casa" aria-label="Prefixo dos tópicos">
+      </div>
+      <button id="m-go">Conectar</button>
+      <button id="m-off" style="display:none">Voltar à demonstração</button>
+      <p style="font-size:12px;color:var(--mut);margin:10px 0 0">Precisa de internet. A senha fica guardada só neste navegador. O ESP32 precisa estar ligado e com o firmware atualizado.</p>
+    </details>
+    <div id="app"></div>
+  </div>
+</section>
+
+<!-- ============ PEÇAS ============ -->
+<section id="pecas">
+  <h2>Lista de peças</h2>
+  <div class="tw"><table>
+    <tr><th>Qtd</th><th>Peça</th><th>Observação</th></tr>
+    <tr><td>1</td><td>ESP32 DevKit (30 ou 38 pinos)</td><td>Uma placa atende dois ambientes se os LEDs IR alcançarem os aparelhos</td></tr>
+    <tr><td>1</td><td>Módulo relé 4 canais 5 V com optoacoplador</td><td>Compre de 8 canais se quiser mais pontos</td></tr>
+    <tr><td>2</td><td>LED infravermelho 940 nm (5 mm)</td><td>Um por ambiente</td></tr>
+    <tr><td>2</td><td>Transistor NPN 2N2222 ou BC548</td><td>Dá mais alcance ao LED IR</td></tr>
+    <tr><td>2</td><td>Resistor 100 Ω</td><td>Do LED IR</td></tr>
+    <tr><td>2</td><td>Resistor 1 kΩ</td><td>Da base do transistor</td></tr>
+    <tr><td>1</td><td>Fonte 5 V 2 A (de celular)</td><td>Alimenta ESP32 e relés</td></tr>
+    <tr><td>1</td><td>Receptor IR VS1838B ou TSOP38238</td><td>Só para capturar códigos dos controles (uso único)</td></tr>
+    <tr><td>-</td><td>Protoboard ou placa perfurada, jumpers, caixa plástica</td><td></td></tr>
+  </table></div>
+  <div class="callout"><b>⚠️ Segurança (127/220 V)</b>
+    <ul>
+      <li>Os relés ficam entre a rede elétrica e a lâmpada. <b>Desligue o disjuntor</b> antes de mexer em qualquer fio.</li>
+      <li>Se você é iniciante, comece com o relé ligado a uma <b>extensão ou tomada</b> dentro de uma caixa fechada (ex.: um abajur), e não na parede.</li>
+      <li>Para ligar no interruptor ou no quadro, peça a um eletricista.</li>
+      <li>Mantenha a parte de 5 V separada da parte da rede, em caixa fechada e sem fio exposto.</li>
+      <li>Use relés de pelo menos 10 A / 250 V. Ar-condicionado grande não vai direto em relé de módulo: para isso use contator.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============ LIGAÇÕES ============ -->
+<section id="ligacoes">
+  <h2>Ligações</h2>
+  <svg viewBox="0 0 760 390" role="img" aria-label="Diagrama de ligações do ESP32 com relés e LEDs infravermelhos">
+    <rect class="box" x="290" y="30" width="180" height="250" rx="12"/>
+    <text class="t b" x="380" y="58" text-anchor="middle">ESP32</text>
+    <text class="m" x="302" y="100">GPIO 16</text><text class="m" x="302" y="130">GPIO 17</text>
+    <text class="m" x="302" y="160">GPIO 18</text><text class="m" x="302" y="190">GPIO 19</text>
+    <text class="m" x="458" y="100" text-anchor="end">GPIO 4</text>
+    <text class="m" x="458" y="190" text-anchor="end">GPIO 23</text>
+    <text class="m" x="380" y="270" text-anchor="middle">VIN (5 V) · GND</text>
+
+    <rect class="box" x="30" y="70" width="170" height="150" rx="12"/>
+    <text class="t b" x="115" y="96" text-anchor="middle">Módulo relé</text>
+    <text class="m" x="115" y="116" text-anchor="middle">4 canais · 5 V</text>
+    <text class="t" x="115" y="150" text-anchor="middle">IN1 · IN2 · IN3 · IN4</text>
+    <text class="m" x="115" y="176" text-anchor="middle">luz sala · luz quarto</text>
+    <text class="m" x="115" y="194" text-anchor="middle">luz cozinha · tomada extra</text>
+    <path class="ln" d="M290 96H200"/><path class="ln" d="M290 126H200"/>
+    <path class="ln" d="M290 156H200"/><path class="ln" d="M290 186H200"/>
+
+    <rect class="box" x="560" y="50" width="170" height="90" rx="12"/>
+    <text class="t b" x="645" y="76" text-anchor="middle">Saída IR 0</text>
+    <text class="m" x="645" y="98" text-anchor="middle">1 kΩ → NPN → LED IR</text>
+    <text class="m" x="645" y="118" text-anchor="middle">TV sala · Home · Ar sala</text>
+    <path class="ln" d="M470 96H560"/>
+
+    <rect class="box" x="560" y="150" width="170" height="90" rx="12"/>
+    <text class="t b" x="645" y="176" text-anchor="middle">Saída IR 1</text>
+    <text class="m" x="645" y="198" text-anchor="middle">1 kΩ → NPN → LED IR</text>
+    <text class="m" x="645" y="218" text-anchor="middle">TV quarto · Ar quarto</text>
+    <path class="ln" d="M470 190H520V195H560"/>
+
+    <rect class="box" x="300" y="330" width="160" height="44" rx="10"/>
+    <text class="t b" x="380" y="357" text-anchor="middle">Fonte 5 V · 2 A</text>
+    <path class="ln pw" d="M380 330V280"/>
+    <text class="m" x="392" y="310">5 V também alimenta relés e LEDs IR</text>
+  </svg>
+
+  <h3>Relés (módulo 4 canais)</h3>
+  <div class="tw"><table>
+    <tr><th>Módulo</th><th>ESP32</th></tr>
+    <tr><td>VCC</td><td>VIN (5 V)</td></tr>
+    <tr><td>GND</td><td>GND</td></tr>
+    <tr><td>IN1 / IN2 / IN3 / IN4</td><td>GPIO 16 / 17 / 18 / 19</td></tr>
+  </table></div>
+
+  <h3>LED infravermelho (repita para cada saída)</h3>
+<pre>GPIO 4 (ambiente 1) ──[1 kΩ]──► base do NPN
+                                 emissor ──► GND
+5 V (VIN) ──[100 Ω]──► ânodo (perna longa) do LED IR
+                       cátodo ──► coletor do NPN</pre>
+  <p style="margin-top:12px">A segunda saída é igual, usando o <b>GPIO 23</b> (ambiente 2).</p>
+  <div class="callout info"><b>Qual LED atende o quê?</b> A saída 0 atende <b>TV sala, Home theater e Ar sala</b>. A saída 1 atende <b>TV quarto e Ar quarto</b>. Aponte cada LED IR para os aparelhos do ambiente. Se os ambientes ficarem longe, leve o LED até lá com um cabo fino ou monte uma segunda placa com o mesmo firmware.</div>
+</section>
+
+<!-- ============ MQTT ============ -->
+<section id="mqtt">
+  <h2>Tópicos MQTT</h2>
+  <p>Servidor: <code>w8767ca9.ala.us-east-1.emqxsl.com</code> · porta <code>8883</code> (TLS) · usuário <code>RICARDO</code>. Cada comando tem o seu próprio tópico. Publique os comandos <b>sem retain</b>, senão o ESP32 repete o comando toda vez que reconectar.</p>
+  <h3>Comandos (você publica, o ESP32 escuta)</h3>
+  <div class="tw"><table>
+    <tr><th>Tópico</th><th>Mensagem</th><th>O que faz</th></tr>
+    <tr><td><code>casa/cmd/luz_sala</code></td><td>1, 0 ou toggle</td><td>Liga, desliga ou alterna a luz da sala</td></tr>
+    <tr><td><code>casa/cmd/luz_quarto</code></td><td>1, 0 ou toggle</td><td>Luz do quarto</td></tr>
+    <tr><td><code>casa/cmd/luz_cozinha</code></td><td>1, 0 ou toggle</td><td>Luz da cozinha</td></tr>
+    <tr><td><code>casa/cmd/tomada_extra</code></td><td>1, 0 ou toggle</td><td>Tomada extra</td></tr>
+    <tr><td><code>casa/cmd/tv_sala/<i>botão</i></code></td><td>qualquer (ex.: 1)</td><td>Envia o botão IR para a TV da sala</td></tr>
+    <tr><td><code>casa/cmd/tv_quarto/<i>botão</i></code></td><td>qualquer (ex.: 1)</td><td>Envia o botão IR para a TV do quarto</td></tr>
+    <tr><td><code>casa/cmd/home_theater/<i>botão</i></code></td><td>qualquer (ex.: 1)</td><td>Envia o botão IR para o home theater</td></tr>
+    <tr><td><code>casa/cmd/ar_sala/power</code></td><td>1 ou 0</td><td>Liga ou desliga o ar da sala</td></tr>
+    <tr><td><code>casa/cmd/ar_sala/temp</code></td><td>16 a 30</td><td>Temperatura (liga o ar se estiver desligado)</td></tr>
+    <tr><td><code>casa/cmd/ar_sala/mode</code></td><td>cool, heat, dry, fan, auto</td><td>Modo de operação</td></tr>
+    <tr><td><code>casa/cmd/ar_sala/fan</code></td><td>auto, low, med, high</td><td>Velocidade do ventilador</td></tr>
+    <tr><td><code>casa/cmd/ar_quarto/…</code></td><td>igual ao ar_sala</td><td>power, temp, mode e fan do ar do quarto</td></tr>
+  </table></div>
+  <p><i>botão</i> pode ser: <code>power</code>, <code>mute</code>, <code>volUp</code>, <code>volDown</code>, <code>chUp</code>, <code>chDown</code> ou <code>source</code>.</p>
+  <h3>Estado (o ESP32 publica, retido)</h3>
+  <div class="tw"><table>
+    <tr><th>Tópico</th><th>Mensagem</th><th>Significado</th></tr>
+    <tr><td><code>casa/state/luz_sala (e as outras luzes)</code></td><td>1 ou 0</td><td>Estado atual de cada relé</td></tr>
+    <tr><td><code>casa/state/ar_sala/power</code></td><td>1 ou 0</td><td>Ar ligado ou desligado</td></tr>
+    <tr><td><code>casa/state/ar_sala/temp</code></td><td>16 a 30</td><td>Temperatura ajustada</td></tr>
+    <tr><td><code>casa/state/ar_sala/mode</code></td><td>cool, heat, dry, fan, auto</td><td>Modo atual</td></tr>
+    <tr><td><code>casa/state/ar_sala/fan</code></td><td>auto, low, med, high</td><td>Ventilador atual (o ar do quarto segue igual)</td></tr>
+    <tr><td><code>casa/status</code></td><td>online ou offline</td><td>Se o ESP32 está conectado (offline é publicado pelo broker se a placa cair)</td></tr>
+    <tr><td><code>casa/error</code></td><td>texto</td><td>Aviso de botão não configurado ou valor inválido (não retido)</td></tr>
+  </table></div>
+  <div class="callout info"><b>Como testar rápido:</b> use o app <b>MQTTX</b> (ou o cliente web do painel do EMQX), conecte com o mesmo servidor, usuário e senha, assine <code>casa/#</code> e publique, por exemplo, <code>toggle</code> em <code>casa/cmd/luz_sala</code>. Ou use o modo ao vivo na aba <b>Painel</b>.</div>
+  <div class="callout"><b>Segurança:</b> quem tiver o usuário e a senha do broker consegue acionar a sua casa. Não compartilhe o <code>config.h</code> nem esta página com a senha preenchida. Depois que tudo funcionar, ligue a validação do certificado (<code>MQTT_USE_INSECURE false</code> e o CA do EMQX no <code>config.h</code>).</div>
+</section>
+
+<!-- ============ INSTALAÇÃO ============ -->
+<section id="instalar">
+  <h2>Instalação</h2>
+  <ol class="steps">
+    <li>Instale a <b>Arduino IDE</b> e, no Gerenciador de Placas, a placa <b>esp32 (Espressif)</b>.</li>
+    <li>No Gerenciador de Bibliotecas, instale <b>IRremoteESP8266</b> e <b>PubSubClient</b> (de Nick O'Leary).</li>
+    <li>Crie uma pasta chamada <code>casa_esp32</code> e salve nela os três arquivos da aba <b>Códigos</b>: <code>casa_esp32.ino</code>, <code>config.h</code> e <code>webui.h</code>.</li>
+    <li>Edite o <code>config.h</code>: nome e senha do Wi-Fi (2,4 GHz), <code>API_TOKEN</code> e os nomes dos pontos. Servidor, usuário e senha do MQTT já estão preenchidos.</li>
+    <li>Selecione a placa <b>ESP32 Dev Module</b>, escolha a porta e clique em <b>Carregar</b>.</li>
+    <li>Abra o Monitor Serial (115200). Aparece o IP da placa e, em seguida, <code>MQTT conectando... ok</code>.</li>
+    <li>No celular (mesmo Wi-Fi), abra <code>http://casa.local</code> ou o IP. Digite a senha do <code>API_TOKEN</code> e use "Adicionar à tela inicial".</li>
+  </ol>
+  <p>Dica: no roteador, reserve um IP fixo para o ESP32. Depois da primeira carga, dá para atualizar pelo Wi-Fi (OTA), com a mesma senha.</p>
+
+  <h3>Configurar os aparelhos</h3>
+  <p><b>TVs Samsung e LG</b> já vêm prontas em <code>CODES_SAMSUNG</code> e <code>CODES_LG</code>. Se a sua for de outra marca, ou um botão não responder, capture os códigos.</p>
+  <p><b>Ares-condicionados:</b> o protocolo padrão é <code>COOLIX</code>, que atende várias marcas, mas pode não ser o seu.</p>
+  <p><b>Home theater:</b> os códigos vêm zerados, então os botões só funcionam depois que você capturar os do seu controle.</p>
+
+  <h3>Capturar códigos do seu controle</h3>
+  <ol class="steps">
+    <li>Ligue o receptor IR em uma placa ESP32: VCC em 3,3 V, GND e sinal no GPIO 14.</li>
+    <li>Na Arduino IDE: Arquivo › Exemplos › IRremoteESP8266 › <b>IRrecvDumpV2</b>.</li>
+    <li>Confira <code>kRecvPin = 14</code>, carregue e abra o Monitor Serial.</li>
+    <li>Aponte o controle e aperte cada botão. O Monitor mostra o <b>protocolo</b> (ex.: <code>NEC</code>) e o <b>código</b> (ex.: <code>0x20DF10EF</code>).</li>
+    <li>Ar-condicionado: o nome do protocolo (ex.: <code>GREE</code>, <code>SAMSUNG_AC</code>) vai em <code>AC_DEVICES</code> no <code>config.h</code>.</li>
+    <li>TV ou home theater: copie os códigos para uma tabela <code>IrButtons</code> e ajuste o protocolo em <code>IR_DEVICES</code>.</li>
+  </ol>
+
+  <h3>Acesso de fora de casa</h3>
+  <p>Não precisa abrir porta no roteador: o ESP32 conecta no broker MQTT, e você controla de qualquer lugar pela aba <b>Painel</b> (modo ao vivo) ou por um app MQTT, como o MQTTX. O painel local <code>http://casa.local</code> continua acessível só dentro da sua rede.</p>
+</section>
+
+<!-- ============ CÓDIGOS ============ -->
+<section id="codigos">
+  <h2>Códigos do projeto</h2>
+  <p>Salve os três arquivos na mesma pasta <code>casa_esp32</code>. Só o <code>config.h</code> precisa de edição.</p>
+  <div class="ft" id="ftabs">
+    <button data-f="f-ino" class="sel">casa_esp32.ino</button>
+    <button data-f="f-cfg">config.h</button>
+    <button data-f="f-web">webui.h</button>
+  </div>
+
+  <div class="file sel" id="f-ino" data-name="casa_esp32.ino">
+    <pre>// Automação residencial com ESP32
+// Controla: relés (luzes/tomadas), TVs, home theater e ares-condicionados (IR)
+// Dois jeitos de controlar:
+//   1) Painel web local no celular: http://casa.local
+//   2) MQTT (EMQX Cloud): um tópico para cada comando, de qualquer lugar
+//
+// Bibliotecas (Gerenciador de Bibliotecas): IRremoteESP8266 e PubSubClient
+
+#include &lt;WiFi.h&gt;
+#include &lt;WiFiClientSecure.h&gt;
+#include &lt;WebServer.h&gt;
+#include &lt;ESPmDNS.h&gt;
+#include &lt;ArduinoOTA.h&gt;
+#include &lt;PubSubClient.h&gt;
+#include &lt;IRremoteESP8266.h&gt;
+#include &lt;IRsend.h&gt;
+#include &lt;IRac.h&gt;
+#include &lt;time.h&gt;
+
+#include &quot;config.h&quot;
+#include &quot;webui.h&quot;
+
+WebServer server(80);
+WiFiClientSecure netClient;
+PubSubClient mqtt(netClient);
+
+IRsend* irSenders[NUM_IR_OUTPUTS];
+IRac*   acs[NUM_AC];
+bool    relayOn[NUM_RELAYS];
+
+// Tópicos:
+//   comandos (o ESP32 escuta):  casa/cmd/&lt;slug&gt;[/&lt;comando&gt;]
+//   estado   (o ESP32 publica): casa/state/&lt;slug&gt;[/&lt;campo&gt;]   (retido)
+//   conexão:                    casa/status  = online | offline
+#define TOPIC_STATUS MQTT_BASE &quot;/status&quot;
+#define TOPIC_CMD    MQTT_BASE &quot;/cmd/&quot;
+#define TOPIC_STATE  MQTT_BASE &quot;/state/&quot;
+
+static const char* const MODES_OK[] = {&quot;cool&quot;, &quot;heat&quot;, &quot;dry&quot;, &quot;fan&quot;, &quot;auto&quot;};
+static const char* const FANS_OK[]  = {&quot;auto&quot;, &quot;low&quot;, &quot;med&quot;, &quot;high&quot;};
+
+// ------------------------------------------------------------------ utilidades
+static bool isOn(const String&amp; v) {
+  return v == &quot;1&quot; || v.equalsIgnoreCase(&quot;on&quot;) || v.equalsIgnoreCase(&quot;true&quot;);
+}
+static bool oneOf(const String&amp; v, const char* const* list, size_t n) {
+  for (size_t i = 0; i &lt; n; i++) if (v == list[i]) return true;
+  return false;
+}
+static void pub(const String&amp; topic, const String&amp; value) {
+  if (mqtt.connected()) mqtt.publish(topic.c_str(), value.c_str(), true);  // retido
+}
+
+// ------------------------------------------------------------------ relés
+static void publishRelay(size_t i) {
+  pub(String(TOPIC_STATE) + RELAY_SLUGS[i], relayOn[i] ? &quot;1&quot; : &quot;0&quot;);
+}
+static void setRelay(size_t i, bool on) {
+  relayOn[i] = on;
+  digitalWrite(RELAY_PINS[i], (on != RELAY_ACTIVE_LOW) ? HIGH : LOW);
+  publishRelay(i);
+}
+
+// ------------------------------------------------------------------ ar-condicionado
+static stdAc::opmode_t parseMode(const String&amp; m) {
+  if (m == &quot;heat&quot;) return stdAc::opmode_t::kHeat;
+  if (m == &quot;dry&quot;)  return stdAc::opmode_t::kDry;
+  if (m == &quot;fan&quot;)  return stdAc::opmode_t::kFan;
+  if (m == &quot;auto&quot;) return stdAc::opmode_t::kAuto;
+  return stdAc::opmode_t::kCool;
+}
+static const char* modeName(stdAc::opmode_t m) {
+  switch (m) {
+    case stdAc::opmode_t::kHeat: return &quot;heat&quot;;
+    case stdAc::opmode_t::kDry:  return &quot;dry&quot;;
+    case stdAc::opmode_t::kFan:  return &quot;fan&quot;;
+    case stdAc::opmode_t::kAuto: return &quot;auto&quot;;
+    default:                     return &quot;cool&quot;;
+  }
+}
+static stdAc::fanspeed_t parseFan(const String&amp; f) {
+  if (f == &quot;low&quot;)  return stdAc::fanspeed_t::kLow;
+  if (f == &quot;med&quot;)  return stdAc::fanspeed_t::kMedium;
+  if (f == &quot;high&quot;) return stdAc::fanspeed_t::kHigh;
+  return stdAc::fanspeed_t::kAuto;
+}
+static const char* fanName(stdAc::fanspeed_t f) {
+  switch (f) {
+    case stdAc::fanspeed_t::kLow:    case stdAc::fanspeed_t::kMin:  return &quot;low&quot;;
+    case stdAc::fanspeed_t::kMedium: return &quot;med&quot;;
+    case stdAc::fanspeed_t::kHigh:   case stdAc::fanspeed_t::kMax:  return &quot;high&quot;;
+    default:                         return &quot;auto&quot;;
+  }
+}
+
+static void publishAc(size_t i) {
+  const stdAc::state_t&amp; n = acs[i]-&gt;next;
+  String base = String(TOPIC_STATE) + AC_DEVICES[i].slug + &quot;/&quot;;
+  pub(base + &quot;power&quot;, n.power ? &quot;1&quot; : &quot;0&quot;);
+  pub(base + &quot;temp&quot;,  String((int)n.degrees));
+  pub(base + &quot;mode&quot;,  modeName(n.mode));
+  pub(base + &quot;fan&quot;,   fanName(n.fanspeed));
+}
+
+// Altera um campo do ar (sem enviar IR ainda). Retorna false se campo/valor inválido.
+static bool acSet(size_t id, const String&amp; field, const String&amp; v) {
+  stdAc::state_t&amp; n = acs[id]-&gt;next;
+  if (field == &quot;power&quot;) { n.power = isOn(v); return true; }
+  if (field == &quot;temp&quot;)  { n.degrees = constrain(v.toInt(), 16, 30); return true; }
+  if (field == &quot;mode&quot; &amp;&amp; oneOf(v, MODES_OK, 5)) { n.mode = parseMode(v); return true; }
+  if (field == &quot;fan&quot;  &amp;&amp; oneOf(v, FANS_OK, 4))   { n.fanspeed = parseFan(v); return true; }
+  return false;
+}
+static void acSend(size_t id) {
+  acs[id]-&gt;sendAc();
+  publishAc(id);
+}
+
+// ------------------------------------------------------------------ IR (TV / home)
+static uint32_t codeFor(const IrButtons* b, const String&amp; cmd) {
+  if (cmd == &quot;power&quot;)   return b-&gt;power;
+  if (cmd == &quot;volUp&quot;)   return b-&gt;volUp;
+  if (cmd == &quot;volDown&quot;) return b-&gt;volDown;
+  if (cmd == &quot;mute&quot;)    return b-&gt;mute;
+  if (cmd == &quot;chUp&quot;)    return b-&gt;chUp;
+  if (cmd == &quot;chDown&quot;)  return b-&gt;chDown;
+  if (cmd == &quot;source&quot;)  return b-&gt;source;
+  return 0;
+}
+// Retorna nullptr se enviou, ou o texto do erro.
+static const char* applyIr(size_t dev, const String&amp; cmd) {
+  const IrDevice&amp; d = IR_DEVICES[dev];
+  uint32_t code = codeFor(d.codes, cmd);
+  if (code == 0) return &quot;Botao invalido ou nao configurado em config.h&quot;;
+  irSenders[d.ir]-&gt;send(d.protocol, code, 32);
+  return nullptr;
+}
+
+// ------------------------------------------------------------------ MQTT
+static void publishAll() {
+  for (size_t i = 0; i &lt; NUM_RELAYS; i++) publishRelay(i);
+  for (size_t i = 0; i &lt; NUM_AC; i++) publishAc(i);
+}
+
+// Chega uma mensagem em casa/cmd/&lt;slug&gt;[/&lt;comando&gt;]
+static void onMqtt(char* topic, byte* payload, unsigned int len) {
+  String t(topic);
+  String v;
+  v.reserve(len);
+  for (unsigned int i = 0; i &lt; len; i++) v += (char)payload[i];
+  v.trim();
+  Serial.printf(&quot;MQTT &lt;&lt; %s = %s\n&quot;, topic, v.c_str());
+
+  const String prefix(TOPIC_CMD);
+  if (!t.startsWith(prefix)) return;
+  String rest = t.substring(prefix.length());
+  int sl = rest.indexOf(&#x27;/&#x27;);
+  String slug = (sl &lt; 0) ? rest : rest.substring(0, sl);
+  String sub  = (sl &lt; 0) ? &quot;&quot;   : rest.substring(sl + 1);
+
+  // Relé: casa/cmd/luz_sala  -&gt; 1 | 0 | toggle
+  for (size_t i = 0; i &lt; NUM_RELAYS; i++) {
+    if (slug == RELAY_SLUGS[i] &amp;&amp; sub == &quot;&quot;) {
+      bool on = (v == &quot;toggle&quot;) ? !relayOn[i] : isOn(v);
+      setRelay(i, on);
+      return;
+    }
+  }
+  // TV / home: casa/cmd/tv_sala/power  (qualquer conteúdo)
+  for (size_t i = 0; i &lt; NUM_IR_DEVICES; i++) {
+    if (slug == IR_DEVICES[i].slug) {
+      const char* err = applyIr(i, sub);
+      if (err) mqtt.publish(MQTT_BASE &quot;/error&quot;, (String(topic) + &quot;: &quot; + err).c_str());
+      return;
+    }
+  }
+  // Ar: casa/cmd/ar_sala/power|temp|mode|fan
+  for (size_t i = 0; i &lt; NUM_AC; i++) {
+    if (slug == AC_DEVICES[i].slug) {
+      if (!acSet(i, sub, v)) {
+        mqtt.publish(MQTT_BASE &quot;/error&quot;, (String(topic) + &quot;: campo ou valor invalido&quot;).c_str());
+        return;
+      }
+      if (sub != &quot;power&quot;) acs[i]-&gt;next.power = true;  // ajustar liga o ar, como no controle
+      acSend(i);
+      return;
+    }
+  }
+}
+
+static void mqttLoop() {
+  if (mqtt.connected()) { mqtt.loop(); return; }
+  static uint32_t last = 0;
+  if (millis() - last &lt; 5000) return;
+  last = millis();
+  if (WiFi.status() != WL_CONNECTED) return;
+
+  String id = String(&quot;casa-esp32-&quot;) + String((uint32_t)ESP.getEfuseMac(), HEX);
+  Serial.print(&quot;MQTT conectando... &quot;);
+  // Último desejo: se a placa cair, o broker publica &quot;offline&quot;
+  if (mqtt.connect(id.c_str(), MQTT_USER, MQTT_PASS, TOPIC_STATUS, 1, true, &quot;offline&quot;)) {
+    Serial.println(&quot;ok&quot;);
+    mqtt.publish(TOPIC_STATUS, &quot;online&quot;, true);
+    mqtt.subscribe(MQTT_BASE &quot;/cmd/#&quot;, 1);
+    publishAll();
+  } else {
+    Serial.printf(&quot;falhou (codigo %d)\n&quot;, mqtt.state());
+  }
+}
+
+// ------------------------------------------------------------------ API HTTP (painel local)
+static bool authorized() {
+  if (server.header(&quot;X-Token&quot;) == API_TOKEN) return true;
+  server.send(401, &quot;text/plain&quot;, &quot;Senha invalida&quot;);
+  return false;
+}
+
+static String stateJson() {
+  String j = &quot;{\&quot;relays\&quot;:[&quot;;
+  for (size_t i = 0; i &lt; NUM_RELAYS; i++) {
+    if (i) j += &#x27;,&#x27;;
+    j += &quot;{\&quot;n\&quot;:\&quot;&quot;; j += RELAY_NAMES[i];
+    j += &quot;\&quot;,\&quot;on\&quot;:&quot;; j += relayOn[i] ? &quot;true&quot; : &quot;false&quot;; j += &#x27;}&#x27;;
+  }
+  j += &quot;],\&quot;ir\&quot;:[&quot;;
+  for (size_t i = 0; i &lt; NUM_IR_DEVICES; i++) {
+    if (i) j += &#x27;,&#x27;;
+    j += &quot;{\&quot;n\&quot;:\&quot;&quot;; j += IR_DEVICES[i].name;
+    j += &quot;\&quot;,\&quot;ch\&quot;:&quot;; j += (IR_DEVICES[i].codes-&gt;chUp != 0) ? &quot;true&quot; : &quot;false&quot;; j += &#x27;}&#x27;;
+  }
+  j += &quot;],\&quot;ac\&quot;:[&quot;;
+  for (size_t i = 0; i &lt; NUM_AC; i++) {
+    if (i) j += &#x27;,&#x27;;
+    const stdAc::state_t&amp; n = acs[i]-&gt;next;
+    j += &quot;{\&quot;n\&quot;:\&quot;&quot;; j += AC_DEVICES[i].name;
+    j += &quot;\&quot;,\&quot;power\&quot;:&quot;; j += n.power ? &quot;true&quot; : &quot;false&quot;;
+    j += &quot;,\&quot;temp\&quot;:&quot;; j += (int)n.degrees;
+    j += &quot;,\&quot;mode\&quot;:\&quot;&quot;; j += modeName(n.mode);
+    j += &quot;\&quot;,\&quot;fan\&quot;:\&quot;&quot;; j += fanName(n.fanspeed);
+    j += &quot;\&quot;}&quot;;
+  }
+  j += &quot;]}&quot;;
+  return j;
+}
+
+static void sendState() {
+  server.send(200, &quot;application/json; charset=utf-8&quot;, stateJson());
+}
+
+static void handleRelay() {
+  if (!authorized()) return;
+  int ch = server.arg(&quot;ch&quot;).toInt();
+  if (ch &lt; 0 || ch &gt;= (int)NUM_RELAYS) { server.send(400, &quot;text/plain&quot;, &quot;Rele invalido&quot;); return; }
+  String st = server.arg(&quot;state&quot;);
+  bool on = (st == &quot;&quot; || st == &quot;toggle&quot;) ? !relayOn[ch] : (st == &quot;1&quot;);
+  setRelay(ch, on);
+  sendState();
+}
+
+static void handleIr() {
+  if (!authorized()) return;
+  int dev = server.arg(&quot;dev&quot;).toInt();
+  if (dev &lt; 0 || dev &gt;= (int)NUM_IR_DEVICES) { server.send(400, &quot;text/plain&quot;, &quot;Dispositivo invalido&quot;); return; }
+  const char* err = applyIr(dev, server.arg(&quot;cmd&quot;));
+  if (err) { server.send(400, &quot;text/plain&quot;, err); return; }
+  sendState();
+}
+
+static void handleAc() {
+  if (!authorized()) return;
+  int id = server.arg(&quot;id&quot;).toInt();
+  if (id &lt; 0 || id &gt;= (int)NUM_AC) { server.send(400, &quot;text/plain&quot;, &quot;Ar invalido&quot;); return; }
+  static const char* const fields[] = {&quot;power&quot;, &quot;temp&quot;, &quot;mode&quot;, &quot;fan&quot;};
+  bool changed = false;
+  for (const char* f : fields) {
+    if (server.hasArg(f) &amp;&amp; acSet(id, f, server.arg(f))) changed = true;
+  }
+  if (changed &amp;&amp; !server.hasArg(&quot;power&quot;)) acs[id]-&gt;next.power = true;
+  acSend(id);
+  sendState();
+}
+
+// ------------------------------------------------------------------ setup / loop
+static void connectWifi() {
+  WiFi.mode(WIFI_STA);
+  WiFi.setHostname(HOSTNAME);
+  WiFi.setAutoReconnect(true);
+  WiFi.begin(WIFI_SSID, WIFI_PASS);
+  Serial.print(&quot;Conectando ao Wi-Fi&quot;);
+  uint32_t t0 = millis();
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(&#x27;.&#x27;);
+    if (millis() - t0 &gt; 30000) { Serial.println(&quot;\nFalhou, reiniciando...&quot;); ESP.restart(); }
+  }
+  Serial.print(&quot;\nIP: &quot;); Serial.println(WiFi.localIP());
+}
+
+void setup() {
+  Serial.begin(115200);
+
+  // Relés: define o nível &quot;desligado&quot; ANTES de virar saída (evita pulso no boot)
+  for (size_t i = 0; i &lt; NUM_RELAYS; i++) {
+    digitalWrite(RELAY_PINS[i], RELAY_ACTIVE_LOW ? HIGH : LOW);
+    pinMode(RELAY_PINS[i], OUTPUT);
+    relayOn[i] = false;
+  }
+
+  // Saídas IR
+  for (size_t i = 0; i &lt; NUM_IR_OUTPUTS; i++) {
+    irSenders[i] = new IRsend(IR_PINS[i]);
+    irSenders[i]-&gt;begin();
+  }
+
+  // Ares-condicionados
+  for (size_t i = 0; i &lt; NUM_AC; i++) {
+    acs[i] = new IRac(IR_PINS[AC_DEVICES[i].ir]);
+    stdAc::state_t&amp; n = acs[i]-&gt;next;
+    n.protocol = AC_DEVICES[i].protocol;
+    n.model = -1;
+    n.power = false;
+    n.mode = stdAc::opmode_t::kCool;
+    n.celsius = true;
+    n.degrees = 24;
+    n.fanspeed = stdAc::fanspeed_t::kAuto;
+    n.swingv = stdAc::swingv_t::kOff;
+    n.swingh = stdAc::swingh_t::kOff;
+  }
+
+  connectWifi();
+
+  // Hora via internet (necessária para validar o certificado TLS)
+  configTime(-3 * 3600, 0, &quot;pool.ntp.org&quot;, &quot;time.google.com&quot;);
+
+  if (MDNS.begin(HOSTNAME)) MDNS.addService(&quot;http&quot;, &quot;tcp&quot;, 80);
+
+  ArduinoOTA.setHostname(HOSTNAME);
+  ArduinoOTA.setPassword(API_TOKEN);  // atualização sem cabo exige a mesma senha
+  ArduinoOTA.begin();
+
+  // MQTT com TLS
+  if (MQTT_USE_INSECURE) netClient.setInsecure();
+  else netClient.setCACert(MQTT_CA_CERT);
+  mqtt.setServer(MQTT_HOST, MQTT_PORT);
+  mqtt.setCallback(onMqtt);
+  mqtt.setBufferSize(512);
+  mqtt.setKeepAlive(30);
+
+  const char* headerKeys[] = {&quot;X-Token&quot;};
+  server.collectHeaders(headerKeys, 1);
+  server.on(&quot;/&quot;, HTTP_GET, []() { server.send_P(200, &quot;text/html; charset=utf-8&quot;, INDEX_HTML); });
+  server.on(&quot;/api/state&quot;, HTTP_GET, []() { if (authorized()) sendState(); });
+  server.on(&quot;/api/relay&quot;, HTTP_POST, handleRelay);
+  server.on(&quot;/api/ir&quot;, HTTP_POST, handleIr);
+  server.on(&quot;/api/ac&quot;, HTTP_POST, handleAc);
+  server.begin();
+
+  Serial.println(&quot;Pronto! Painel local: http://&quot; HOSTNAME &quot;.local&quot;);
+}
+
+void loop() {
+  ArduinoOTA.handle();
+  server.handleClient();
+  mqttLoop();
+
+  static uint32_t lastCheck = 0;
+  if (millis() - lastCheck &gt; 10000) {
+    lastCheck = millis();
+    if (WiFi.status() != WL_CONNECTED) WiFi.reconnect();
+  }
+}
+</pre>
+    <div class="act"><button data-copy="f-ino">Copiar</button><button data-dl="f-ino">Baixar</button></div>
+  </div>
+  <div class="file" id="f-cfg" data-name="config.h">
+    <pre>#pragma once
+#include &lt;IRremoteESP8266.h&gt;
+
+// =====================================================================
+//  CONFIGURAÇÃO — edite só este arquivo para adaptar à sua casa
+// =====================================================================
+
+// ---- Wi-Fi (ESP32 só conecta em 2,4 GHz) ----
+#define WIFI_SSID &quot;SUA_REDE&quot;
+#define WIFI_PASS &quot;SUA_SENHA&quot;
+
+// Painel local pelo celular: http://casa.local  (ou pelo IP no Serial)
+#define HOSTNAME &quot;casa&quot;
+
+// Senha do painel local e das atualizações OTA. Troque!
+#define API_TOKEN &quot;troque-esta-senha&quot;
+
+// ---- MQTT (EMQX Cloud) ----
+// Conexão segura (TLS) na porta 8883.
+#define MQTT_HOST &quot;w8767ca9.ala.us-east-1.emqxsl.com&quot;
+#define MQTT_PORT 8883
+#define MQTT_USER &quot;RICARDO&quot;
+#define MQTT_PASS &quot;senai&quot;
+
+// Prefixo de todos os tópicos: casa/cmd/..., casa/state/..., casa/status
+#define MQTT_BASE &quot;casa&quot;
+
+// true  = conexão criptografada, mas SEM conferir a identidade do servidor (mais fácil para começar)
+// false = confere o certificado usando MQTT_CA_CERT abaixo (recomendado depois que funcionar)
+#define MQTT_USE_INSECURE true
+
+// Para usar com MQTT_USE_INSECURE false: no painel do EMQX Cloud, abra seu
+// deployment, baixe o &quot;CA certificate&quot; e cole aqui entre as linhas BEGIN/END.
+static const char MQTT_CA_CERT[] = R&quot;EOF(
+-----BEGIN CERTIFICATE-----
+COLE_AQUI_O_CERTIFICADO_CA_DO_EMQX
+-----END CERTIFICATE-----
+)EOF&quot;;
+
+// ---- Relés (luzes e tomadas) ----
+// Um pino por relé. O &quot;slug&quot; é o nome usado no tópico MQTT (sem espaços/acentos).
+static const uint8_t RELAY_PINS[]  = {16, 17, 18, 19};
+static const char*   RELAY_NAMES[] = {&quot;Luz sala&quot;, &quot;Luz quarto&quot;, &quot;Luz cozinha&quot;, &quot;Tomada extra&quot;};
+static const char*   RELAY_SLUGS[] = {&quot;luz_sala&quot;, &quot;luz_quarto&quot;, &quot;luz_cozinha&quot;, &quot;tomada_extra&quot;};
+#define NUM_RELAYS (sizeof(RELAY_PINS) / sizeof(RELAY_PINS[0]))
+
+// A maioria dos módulos de relé de 4/8 canais liga com nível BAIXO (LOW).
+// Se as luzes ligarem &quot;ao contrário&quot; no boot, troque para false.
+#define RELAY_ACTIVE_LOW true
+
+// ---- Saídas infravermelho (LEDs IR) ----
+// Duas saídas: uma por ambiente. Cada TV/ar/home usa a saída do seu ambiente.
+// Índice 0 = IR_PINS[0], índice 1 = IR_PINS[1].
+static const uint8_t IR_PINS[] = {4, 23};
+#define NUM_IR_OUTPUTS (sizeof(IR_PINS) / sizeof(IR_PINS[0]))
+
+// ---- Códigos de controle remoto ----
+struct IrButtons {
+  uint32_t power, volUp, volDown, mute, chUp, chDown, source;
+};
+
+// Samsung (protocolo SAMSUNG, 32 bits)
+static const IrButtons CODES_SAMSUNG = {
+  0xE0E040BF, 0xE0E0E01F, 0xE0E0D02F, 0xE0E0F00F, 0xE0E048B7, 0xE0E008F7, 0xE0E0807F};
+
+// LG (protocolo NEC, 32 bits)
+static const IrButtons CODES_LG = {
+  0x20DF10EF, 0x20DF40BF, 0x20DFC03F, 0x20DF906F, 0x20DF00FF, 0x20DF807F, 0x20DFD02F};
+
+// Home theater / soundbar / receiver: cada marca usa códigos diferentes.
+// Capture os seus com o exemplo IRrecvDumpV2 (veja o README) e cole aqui.
+// Valor 0 = botão não configurado (o painel e o MQTT avisam).
+static const IrButtons CODES_HOME = {
+  0x00000000,   // power
+  0x00000000,   // vol +
+  0x00000000,   // vol -
+  0x00000000,   // mudo
+  0x00000000,   // (não usado)
+  0x00000000,   // (não usado)
+  0x00000000};  // entrada
+
+// ---- Dispositivos controlados por IR (TVs e home) ----
+// {nome, slug MQTT, saída IR (0 ou 1), protocolo, tabela de códigos}
+// Se sua TV não for Samsung/LG, capture os códigos e crie outra tabela acima.
+struct IrDevice {
+  const char* name;
+  const char* slug;
+  uint8_t ir;
+  decode_type_t protocol;
+  const IrButtons* codes;
+};
+static const IrDevice IR_DEVICES[] = {
+  {&quot;TV sala&quot;,      &quot;tv_sala&quot;,      0, decode_type_t::SAMSUNG, &amp;CODES_SAMSUNG},
+  {&quot;TV quarto&quot;,    &quot;tv_quarto&quot;,    1, decode_type_t::NEC,     &amp;CODES_LG},
+  {&quot;Home theater&quot;, &quot;home_theater&quot;, 0, decode_type_t::NEC,     &amp;CODES_HOME},
+};
+#define NUM_IR_DEVICES (sizeof(IR_DEVICES) / sizeof(IR_DEVICES[0]))
+
+// ---- Ares-condicionados ----
+// Protocolo = linguagem do controle do seu ar. Exemplos comuns:
+//   COOLIX (Springer, Midea, Carrier...), GREE, SAMSUNG_AC, LG2, DAIKIN,
+//   FUJITSU_AC, HITACHI_AC, PANASONIC_AC, MITSUBISHI_AC, TCL112AC, ELECTRA_AC
+// Descubra o seu com IRrecvDumpV2 (veja o README).
+struct AcDevice {
+  const char* name;
+  const char* slug;
+  uint8_t ir;
+  decode_type_t protocol;
+};
+static const AcDevice AC_DEVICES[] = {
+  {&quot;Ar sala&quot;,   &quot;ar_sala&quot;,   0, decode_type_t::COOLIX},
+  {&quot;Ar quarto&quot;, &quot;ar_quarto&quot;, 1, decode_type_t::COOLIX},
+};
+#define NUM_AC (sizeof(AC_DEVICES) / sizeof(AC_DEVICES[0]))
+</pre>
+    <div class="act"><button data-copy="f-cfg">Copiar</button><button data-dl="f-cfg">Baixar</button></div>
+  </div>
+  <div class="file" id="f-web" data-name="webui.h">
+    <pre>#pragma once
+#include &lt;pgmspace.h&gt;
+
+// Painel web (abre no celular). Servido direto pelo ESP32.
+static const char INDEX_HTML[] PROGMEM = R&quot;rawliteral(&lt;!doctype html&gt;
+&lt;html lang=&quot;pt-BR&quot;&gt;
+&lt;head&gt;
+&lt;meta charset=&quot;utf-8&quot;&gt;
+&lt;meta name=&quot;viewport&quot; content=&quot;width=device-width,initial-scale=1,viewport-fit=cover&quot;&gt;
+&lt;meta name=&quot;theme-color&quot; content=&quot;#0f1115&quot;&gt;
+&lt;meta name=&quot;apple-mobile-web-app-capable&quot; content=&quot;yes&quot;&gt;
+&lt;meta name=&quot;mobile-web-app-capable&quot; content=&quot;yes&quot;&gt;
+&lt;title&gt;Minha Casa&lt;/title&gt;
+&lt;style&gt;
+:root{--bg:#0f1115;--card:#1a1d24;--line:#2a2f3a;--txt:#e8eaf0;--mut:#8b93a5;--acc:#f5b83d;--cool:#4cc3ff}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:var(--bg);color:var(--txt);font:16px system-ui,-apple-system,Segoe UI,Roboto,sans-serif;padding:16px 16px 40px;max-width:560px;margin-inline:auto}
+h1{font-size:22px;margin:4px 0 2px}
+.sub{color:var(--mut);font-size:13px;margin-bottom:8px}
+h2{font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--mut);margin:26px 0 10px}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.grid.g3{grid-template-columns:repeat(3,1fr)}
+button{font:inherit;color:var(--txt);background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 8px;cursor:pointer;min-height:56px}
+button:active{transform:scale(.97)}
+.tile{display:flex;flex-direction:column;align-items:center;gap:6px;padding:18px 8px}
+.tile .ic{font-size:26px}
+.tile.on{background:#2a2210;border-color:var(--acc);color:var(--acc)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px}
+.ac-top{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.ac-name{font-weight:600}
+.pw{min-height:44px;padding:8px 16px;border-radius:999px}
+.pw.on{background:#0e2a38;border-color:var(--cool);color:var(--cool)}
+.temp{display:flex;align-items:center;justify-content:center;gap:22px;margin:14px 0}
+.temp b{font-size:52px;font-weight:600;min-width:100px;text-align:center}
+.temp button{width:58px;height:58px;border-radius:50%;font-size:26px;padding:0}
+.lbl{font-size:12px;color:var(--mut);margin:12px 0 6px}
+.seg{display:grid;gap:6px}
+.seg button{min-height:44px;padding:8px 2px;font-size:14px;border-radius:10px}
+.seg button.sel{background:#0e2a38;border-color:var(--cool);color:var(--cool)}
+.off{opacity:.55}
+#toast{position:fixed;left:16px;right:16px;bottom:20px;background:#3a1d1d;border:1px solid #a33;color:#fbb;padding:12px 14px;border-radius:12px;display:none;text-align:center}
+&lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;h1&gt;🏠 Minha Casa&lt;/h1&gt;
+&lt;div class=&quot;sub&quot; id=&quot;status&quot;&gt;Conectando…&lt;/div&gt;
+&lt;div id=&quot;app&quot;&gt;&lt;/div&gt;
+&lt;div id=&quot;toast&quot;&gt;&lt;/div&gt;
+
+&lt;script&gt;
+const IR_BTNS=[[&#x27;power&#x27;,&#x27;⏻ Lig/Desl&#x27;],[&#x27;mute&#x27;,&#x27;🔇 Mudo&#x27;],[&#x27;volUp&#x27;,&#x27;Vol +&#x27;],[&#x27;volDown&#x27;,&#x27;Vol −&#x27;],[&#x27;chUp&#x27;,&#x27;Canal +&#x27;],[&#x27;chDown&#x27;,&#x27;Canal −&#x27;],[&#x27;source&#x27;,&#x27;Entrada&#x27;]];
+const MODES=[[&#x27;cool&#x27;,&#x27;❄ Frio&#x27;],[&#x27;heat&#x27;,&#x27;☀ Quente&#x27;],[&#x27;dry&#x27;,&#x27;💧 Seco&#x27;],[&#x27;fan&#x27;,&#x27;🌀 Vent.&#x27;],[&#x27;auto&#x27;,&#x27;Auto&#x27;]];
+const FANS=[[&#x27;auto&#x27;,&#x27;Auto&#x27;],[&#x27;low&#x27;,&#x27;Baixa&#x27;],[&#x27;med&#x27;,&#x27;Média&#x27;],[&#x27;high&#x27;,&#x27;Alta&#x27;]];
+let S=null,busy=false;
+const $=s=&gt;document.querySelector(s);
+
+function toast(m){const t=$(&#x27;#toast&#x27;);t.textContent=m;t.style.display=&#x27;block&#x27;;clearTimeout(toast.h);toast.h=setTimeout(()=&gt;t.style.display=&#x27;none&#x27;,3500);}
+
+async function api(path,method){
+  method=method||&#x27;GET&#x27;;
+  const r=await fetch(path,{method:method,headers:{&#x27;X-Token&#x27;:localStorage.getItem(&#x27;tok&#x27;)||&#x27;&#x27;}});
+  if(r.status===401){
+    const t=prompt(&#x27;Senha de acesso:&#x27;);
+    if(t===null)throw new Error(&#x27;Senha necessária&#x27;);
+    localStorage.setItem(&#x27;tok&#x27;,t);
+    return api(path,method);
+  }
+  if(!r.ok)throw new Error(await r.text());
+  return r.json();
+}
+
+async function load(){
+  if(busy)return;
+  try{S=await api(&#x27;/api/state&#x27;);$(&#x27;#status&#x27;).textContent=&#x27;Conectado&#x27;;render();}
+  catch(e){$(&#x27;#status&#x27;).textContent=&#x27;Sem conexão com a casa&#x27;;}
+}
+
+async function act(path){
+  busy=true;
+  try{S=await api(path,&#x27;POST&#x27;);$(&#x27;#status&#x27;).textContent=&#x27;Conectado&#x27;;render();if(navigator.vibrate)navigator.vibrate(15);}
+  catch(e){toast(&#x27;Falhou: &#x27;+(e.message||&#x27;sem conexão&#x27;));}
+  busy=false;
+}
+
+function render(){
+  let h=&#x27;&lt;h2&gt;Luzes e tomadas&lt;/h2&gt;&lt;div class=&quot;grid&quot;&gt;&#x27;;
+  S.relays.forEach((r,i)=&gt;{
+    h+=`&lt;button class=&quot;tile ${r.on?&#x27;on&#x27;:&#x27;&#x27;}&quot; onclick=&quot;act(&#x27;/api/relay?ch=${i}&amp;state=toggle&#x27;)&quot;&gt;&lt;span class=&quot;ic&quot;&gt;${r.on?&#x27;💡&#x27;:&#x27;○&#x27;}&lt;/span&gt;${r.n}&lt;/button&gt;`;
+  });
+  h+=&#x27;&lt;/div&gt;&#x27;;
+
+  S.ir.forEach((d,i)=&gt;{
+    h+=`&lt;h2&gt;${d.n}&lt;/h2&gt;&lt;div class=&quot;grid g3&quot;&gt;`;
+    IR_BTNS.forEach(b=&gt;{
+      if((b[0]===&#x27;chUp&#x27;||b[0]===&#x27;chDown&#x27;)&amp;&amp;!d.ch)return;
+      h+=`&lt;button onclick=&quot;act(&#x27;/api/ir?dev=${i}&amp;cmd=${b[0]}&#x27;)&quot;&gt;${b[1]}&lt;/button&gt;`;
+    });
+    h+=&#x27;&lt;/div&gt;&#x27;;
+  });
+
+  S.ac.forEach((a,i)=&gt;{
+    h+=`&lt;h2&gt;${a.n}&lt;/h2&gt;&lt;div class=&quot;card ${a.power?&#x27;&#x27;:&#x27;off&#x27;}&quot;&gt;
+      &lt;div class=&quot;ac-top&quot;&gt;&lt;span class=&quot;ac-name&quot;&gt;${a.power?&#x27;Ligado&#x27;:&#x27;Desligado&#x27;}&lt;/span&gt;
+      &lt;button class=&quot;pw ${a.power?&#x27;on&#x27;:&#x27;&#x27;}&quot; onclick=&quot;act(&#x27;/api/ac?id=${i}&amp;power=${a.power?0:1}&#x27;)&quot;&gt;⏻ ${a.power?&#x27;Desligar&#x27;:&#x27;Ligar&#x27;}&lt;/button&gt;&lt;/div&gt;
+      &lt;div class=&quot;temp&quot;&gt;&lt;button onclick=&quot;act(&#x27;/api/ac?id=${i}&amp;temp=${a.temp-1}&#x27;)&quot;&gt;−&lt;/button&gt;&lt;b&gt;${a.temp}°&lt;/b&gt;&lt;button onclick=&quot;act(&#x27;/api/ac?id=${i}&amp;temp=${a.temp+1}&#x27;)&quot;&gt;+&lt;/button&gt;&lt;/div&gt;
+      &lt;div class=&quot;lbl&quot;&gt;Modo&lt;/div&gt;&lt;div class=&quot;seg&quot; style=&quot;grid-template-columns:repeat(5,1fr)&quot;&gt;`;
+    MODES.forEach(m=&gt;h+=`&lt;button class=&quot;${a.mode===m[0]?&#x27;sel&#x27;:&#x27;&#x27;}&quot; onclick=&quot;act(&#x27;/api/ac?id=${i}&amp;mode=${m[0]}&#x27;)&quot;&gt;${m[1]}&lt;/button&gt;`);
+    h+=`&lt;/div&gt;&lt;div class=&quot;lbl&quot;&gt;Ventilador&lt;/div&gt;&lt;div class=&quot;seg&quot; style=&quot;grid-template-columns:repeat(4,1fr)&quot;&gt;`;
+    FANS.forEach(f=&gt;h+=`&lt;button class=&quot;${a.fan===f[0]?&#x27;sel&#x27;:&#x27;&#x27;}&quot; onclick=&quot;act(&#x27;/api/ac?id=${i}&amp;fan=${f[0]}&#x27;)&quot;&gt;${f[1]}&lt;/button&gt;`);
+    h+=&#x27;&lt;/div&gt;&lt;/div&gt;&#x27;;
+  });
+
+  $(&#x27;#app&#x27;).innerHTML=h;
+}
+
+load();
+setInterval(load,6000);
+&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+)rawliteral&quot;;
+</pre>
+    <div class="act"><button data-copy="f-web">Copiar</button><button data-dl="f-web">Baixar</button></div>
+  </div>
+</section>
+
+<!-- ============ PROBLEMAS ============ -->
+<section id="ajuda">
+  <h2>Problemas comuns</h2>
+  <div class="tw"><table>
+    <tr><th>Sintoma</th><th>O que fazer</th></tr>
+    <tr><td><code>casa.local</code> não abre</td><td>Use o IP do Monitor Serial. Alguns Androids não resolvem <code>.local</code></td></tr>
+    <tr><td>Luz liga ao ligar o ESP32</td><td>Troque <code>RELAY_ACTIVE_LOW</code> entre <code>true</code> e <code>false</code></td></tr>
+    <tr><td>Relé não aciona</td><td>Confira se o módulo está em 5 V (VIN) e se o GND é comum</td></tr>
+    <tr><td>TV ou ar não responde</td><td>Aproxime o LED, confira o transistor e capture o código do seu controle</td></tr>
+    <tr><td>Painel pede senha de novo</td><td>A senha digitada não bate com <code>API_TOKEN</code></td></tr>
+    <tr><td>Ar liga mas ignora temperatura</td><td>Protocolo errado em <code>AC_DEVICES</code></td></tr>
+    <tr><td>Botão do home theater avisa "não configurado"</td><td>Capture o código e preencha <code>CODES_HOME</code></td></tr>
+    <tr><td>Serial mostra <code>MQTT falhou (codigo -2)</code></td><td>Sem internet ou servidor/porta errados. Confira <code>MQTT_HOST</code> e a porta 8883</td></tr>
+    <tr><td>Serial mostra <code>codigo 4</code> ou <code>5</code></td><td>Usuário ou senha recusados. Confira <code>MQTT_USER</code> e <code>MQTT_PASS</code></td></tr>
+    <tr><td>Não conecta com <code>MQTT_USE_INSECURE false</code></td><td>Cole o CA certificate completo do seu deployment no <code>config.h</code> e espere a hora sincronizar</td></tr>
+    <tr><td>Comando se repete ao reconectar</td><td>O comando foi publicado com retain. Publique sem retain</td></tr>
+    <tr><td>Modo ao vivo fica em "aguardando o ESP32"</td><td>A placa está offline ou o prefixo dos tópicos é diferente do <code>MQTT_BASE</code></td></tr>
+  </table></div>
+
+  <h3>Próximos passos possíveis</h3>
+  <p>Cenas (ex.: "Cinema" apaga a luz e liga TV e home theater), integração com Alexa ou Google Home, sensor de temperatura e presença, e salvar o estado dos relés ao reiniciar.</p>
+</section>
+
+</main>
+<div id="toast"></div>
+<footer>No modo demonstração nada sai desta página. No modo ao vivo, os comandos vão para o broker MQTT informado.</footer>
+
+<script>
+/* ---------- abas ---------- */
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+$$('#tabs button').forEach(b=>b.onclick=()=>{
+  $$('#tabs button').forEach(x=>x.classList.toggle('sel',x===b));
+  $$('main > section').forEach(s=>s.classList.toggle('sel',s.id===b.dataset.t));
+  window.scrollTo({top:0});
+});
+$$('#ftabs button').forEach(b=>b.onclick=()=>{
+  $$('#ftabs button').forEach(x=>x.classList.toggle('sel',x===b));
+  $$('.file').forEach(f=>f.classList.toggle('sel',f.id===b.dataset.f));
+});
+$$('[data-copy]').forEach(b=>b.onclick=async()=>{
+  const t=$('#'+b.dataset.copy+' pre').textContent;
+  try{await navigator.clipboard.writeText(t);toast('Copiado!','ok');}
+  catch(e){const r=document.createRange();r.selectNodeContents($('#'+b.dataset.copy+' pre'));const s=getSelection();s.removeAllRanges();s.addRange(r);toast('Selecionado. Use Copiar do sistema.','ok');}
+});
+$$('[data-dl]').forEach(b=>b.onclick=()=>{
+  const f=$('#'+b.dataset.dl);
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([f.querySelector('pre').textContent],{type:'text/plain'}));
+  a.download=f.dataset.name;a.click();URL.revokeObjectURL(a.href);
+});
+
+/* ---------- toast ---------- */
+function toast(m,kind){const t=$('#toast');t.textContent=m;t.className=kind||'err';t.style.display='block';clearTimeout(toast.h);toast.h=setTimeout(()=>t.style.display='none',2200);}
+
+/* ---------- painel (mesma lógica do webui.h, com ESP32 simulado) ---------- */
+const IR_BTNS=[['power','⏻ Lig/Desl'],['mute','🔇 Mudo'],['volUp','Vol +'],['volDown','Vol −'],['chUp','Canal +'],['chDown','Canal −'],['source','Entrada']];
+const MODES=[['cool','❄ Frio'],['heat','☀ Quente'],['dry','💧 Seco'],['fan','🌀 Vent.'],['auto','Auto']];
+const FANS=[['auto','Auto'],['low','Baixa'],['med','Média'],['high','Alta']];
+const BTN_NAME={power:'Liga/Desliga',mute:'Mudo',volUp:'Vol +',volDown:'Vol −',chUp:'Canal +',chDown:'Canal −',source:'Entrada'};
+
+const HW={
+  relays:[{n:'Luz sala',on:false},{n:'Luz quarto',on:false},{n:'Luz cozinha',on:false},{n:'Tomada extra',on:false}],
+  ir:[{n:'TV sala',ch:true},{n:'TV quarto',ch:true},{n:'Home theater',ch:false}],
+  ac:[{n:'Ar sala',power:false,temp:24,mode:'cool',fan:'auto'},{n:'Ar quarto',power:false,temp:24,mode:'cool',fan:'auto'}]
+};
+let S=JSON.parse(JSON.stringify(HW));
+
+/* ESP32 simulado: espelha handleRelay / handleIr / handleAc do firmware */
+function fakeEsp(path){
+  const u=new URL(path,'http://casa.local'), p=u.searchParams;
+  if(u.pathname==='/api/relay'){
+    const ch=+p.get('ch'), st=p.get('state');
+    S.relays[ch].on=(st===null||st==='toggle')?!S.relays[ch].on:st==='1';
+  }else if(u.pathname==='/api/ir'){
+    const d=S.ir[+p.get('dev')], c=p.get('cmd');
+    if(d.n==='Home theater')throw new Error('Botão não configurado em config.h (códigos do home theater ainda zerados)');
+    toast('📡 IR enviado: '+d.n+' → '+BTN_NAME[c],'ok');
+  }else if(u.pathname==='/api/ac'){
+    const a=S.ac[+p.get('id')];
+    if(p.has('power'))a.power=p.get('power')==='1';
+    if(p.has('temp'))a.temp=Math.min(30,Math.max(16,+p.get('temp')));
+    if(p.has('mode'))a.mode=p.get('mode');
+    if(p.has('fan'))a.fan=p.get('fan');
+    if(!p.has('power')&&(p.has('temp')||p.has('mode')||p.has('fan')))a.power=true;
+    toast('📡 IR enviado: '+a.n+' → '+(a.power?'ligado, '+a.temp+'°':'desligado'),'ok');
+  }
+  return JSON.parse(JSON.stringify(S));
+}
+const api=(path)=>new Promise((res,rej)=>setTimeout(()=>{try{res(fakeEsp(path))}catch(e){rej(e)}},60));
+/* ---------- modo ao vivo (MQTT por WebSocket seguro) ---------- */
+const SLUG={relays:['luz_sala','luz_quarto','luz_cozinha','tomada_extra'],ir:['tv_sala','tv_quarto','home_theater'],ac:['ar_sala','ar_quarto']};
+let LIVE=false,MQ=null,ESP='?',BASE='casa';
+
+function setBadge(){
+  const b=$('#badge');
+  if(!LIVE){b.textContent='Demonstração · nada é enviado de verdade';b.className='badge';return;}
+  const on=ESP==='online';
+  b.textContent=on?'Ao vivo · ESP32 online':(MQ&&MQ.connected?'Conectado ao broker · aguardando o ESP32':'Conectando ao broker…');
+  b.className='badge '+(on?'live-on':'live-off');
+}
+function loadMqttLib(){
+  return new Promise((res,rej)=>{
+    if(window.mqtt)return res();
+    const s=document.createElement('script');
+    s.src='https://cdn.jsdelivr.net/npm/mqtt@5/dist/mqtt.min.js';
+    s.onload=res;
+    s.onerror=()=>rej(new Error('Sem internet para carregar a biblioteca MQTT'));
+    document.head.appendChild(s);
+  });
+}
+async function goLive(){
+  try{await loadMqttLib();}catch(e){toast(e.message,'err');return;}
+  const url=$('#m-url').value.trim(),user=$('#m-user').value.trim(),pass=$('#m-pass').value;
+  BASE=($('#m-base').value.trim()||'casa').replace(/\/+$/,'');
+  try{localStorage.setItem('mq',JSON.stringify({url:url,user:user,pass:pass,base:BASE}));}catch(e){}
+  if(MQ)MQ.end(true);
+  S=JSON.parse(JSON.stringify(HW));ESP='?';LIVE=true;render();setBadge();
+  MQ=mqtt.connect(url,{username:user,password:pass,clientId:'web-'+Math.random().toString(16).slice(2,10),reconnectPeriod:3000,connectTimeout:8000,clean:true});
+  MQ.on('connect',()=>{
+    MQ.subscribe([BASE+'/state/#',BASE+'/status',BASE+'/error']);
+    $('#m-go').textContent='Reconectar';$('#m-off').style.display='';setBadge();
+  });
+  MQ.on('message',onMsg);
+  MQ.on('reconnect',setBadge);
+  MQ.on('close',setBadge);
+  MQ.on('error',e=>toast('MQTT: '+e.message,'err'));
+}
+function backToDemo(){
+  if(MQ){MQ.end(true);MQ=null;}
+  LIVE=false;ESP='?';S=JSON.parse(JSON.stringify(HW));render();setBadge();
+  $('#m-off').style.display='none';$('#m-go').textContent='Conectar';
+}
+function onMsg(topic,buf){
+  const v=buf.toString();
+  if(topic===BASE+'/status'){ESP=v;setBadge();return;}
+  if(topic===BASE+'/error'){toast('ESP32: '+v,'err');return;}
+  if(topic.indexOf(BASE+'/state/')!==0)return;
+  const p=topic.slice((BASE+'/state/').length).split('/');
+  const ri=SLUG.relays.indexOf(p[0]);
+  if(ri>=0&&p.length===1)S.relays[ri].on=(v==='1');
+  const ai=SLUG.ac.indexOf(p[0]);
+  if(ai>=0&&p.length===2){
+    const a=S.ac[ai];
+    if(p[1]==='power')a.power=(v==='1');
+    else if(p[1]==='temp')a.temp=+v;
+    else if(p[1]==='mode')a.mode=v;
+    else if(p[1]==='fan')a.fan=v;
+  }
+  render();
+}
+/* traduz o clique do painel em publicações MQTT: um tópico por comando */
+function liveSend(path){
+  if(!MQ||!MQ.connected)throw new Error('Sem conexão com o broker');
+  const u=new URL(path,'http://x'),p=u.searchParams;
+  const pubm=(t,m)=>MQ.publish(BASE+'/cmd/'+t,String(m),{qos:1,retain:false});
+  if(u.pathname==='/api/relay'){
+    const st=p.get('state');
+    pubm(SLUG.relays[+p.get('ch')],(st===null||st==='toggle')?'toggle':st);
+  }else if(u.pathname==='/api/ir'){
+    const d=+p.get('dev'),c=p.get('cmd');
+    pubm(SLUG.ir[d]+'/'+c,'1');
+    toast('📡 Enviado: '+S.ir[d].n+' → '+BTN_NAME[c],'ok');
+  }else if(u.pathname==='/api/ac'){
+    const id=+p.get('id');
+    ['power','temp','mode','fan'].forEach(f=>{if(p.has(f))pubm(SLUG.ac[id]+'/'+f,p.get(f));});
+  }
+}
+async function act(path){
+  if(LIVE){
+    try{liveSend(path);if(navigator.vibrate)navigator.vibrate(15);}
+    catch(e){toast('Falhou: '+e.message,'err');}
+    return;
+  }
+  try{S=await api(path);render();if(navigator.vibrate)navigator.vibrate(15);}
+  catch(e){toast('Falhou: '+e.message,'err');}
+}
+
+function render(){
+  let h='<h3>Luzes e tomadas</h3><div class="grid">';
+  S.relays.forEach((r,i)=>{
+    h+=`<button class="tile ${r.on?'on':''}" onclick="act('/api/relay?ch=${i}&state=toggle')"><span class="ic">${r.on?'💡':'○'}</span>${r.n}</button>`;
+  });
+  h+='</div>';
+  S.ir.forEach((d,i)=>{
+    h+=`<h3>${d.n}</h3><div class="grid g3">`;
+    IR_BTNS.forEach(b=>{
+      if((b[0]==='chUp'||b[0]==='chDown')&&!d.ch)return;
+      h+=`<button onclick="act('/api/ir?dev=${i}&cmd=${b[0]}')">${b[1]}</button>`;
+    });
+    h+='</div>';
+  });
+  S.ac.forEach((a,i)=>{
+    h+=`<h3>${a.n}</h3><div class="card ${a.power?'':'off'}">
+      <div class="ac-top"><span class="ac-name">${a.power?'Ligado':'Desligado'}</span>
+      <button class="pw ${a.power?'on':''}" onclick="act('/api/ac?id=${i}&power=${a.power?0:1}')">⏻ ${a.power?'Desligar':'Ligar'}</button></div>
+      <div class="temp"><button onclick="act('/api/ac?id=${i}&temp=${a.temp-1}')">−</button><b>${a.temp}°</b><button onclick="act('/api/ac?id=${i}&temp=${a.temp+1}')">+</button></div>
+      <div class="lbl">Modo</div><div class="seg" style="grid-template-columns:repeat(5,1fr)">`;
+    MODES.forEach(m=>h+=`<button class="${a.mode===m[0]?'sel':''}" onclick="act('/api/ac?id=${i}&mode=${m[0]}')">${m[1]}</button>`);
+    h+=`</div><div class="lbl">Ventilador</div><div class="seg" style="grid-template-columns:repeat(4,1fr)">`;
+    FANS.forEach(f=>h+=`<button class="${a.fan===f[0]?'sel':''}" onclick="act('/api/ac?id=${i}&fan=${f[0]}')">${f[1]}</button>`);
+    h+='</div></div>';
+  });
+  $('#app').innerHTML=h;
+}
+render();
+$('#m-go').onclick=goLive;
+$('#m-off').onclick=backToDemo;
+try{const c=JSON.parse(localStorage.getItem('mq')||'null');if(c){$('#m-url').value=c.url;$('#m-user').value=c.user;$('#m-pass').value=c.pass;$('#m-base').value=c.base;}}catch(e){}
+</script>
+</body>
+</html>
